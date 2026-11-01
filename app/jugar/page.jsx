@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import EmailCard from "@/components/EmailCard";
+import EmailCard, { Sobre } from "@/components/EmailCard";
 import Ranking from "@/components/Ranking";
 import { supabase } from "@/lib/supabase";
 import { CORREOS } from "@/data/correos";
@@ -32,21 +32,34 @@ async function cargarCorreos() {
   return CORREOS;
 }
 
+function rango(monstruos, aciertos, total) {
+  if (aciertos === total && monstruos === 0) return "Guardián de la cripta";
+  if (monstruos === 0) return "Casa intacta";
+  if (monstruos <= 2) return "Cazador con cicatrices";
+  if (monstruos <= 4) return "Casa embrujada";
+  return "Fiesta de monstruos en tu sala";
+}
+
 export default function Jugar() {
-  const [fase, setFase] = useState("inicio"); // inicio | jugando | feedback | fin
+  // inicio → sobre → jugando → feedback → (sobre … ) → fin
+  const [fase, setFase] = useState("inicio");
   const [nombre, setNombre] = useState("");
   const [mazo, setMazo] = useState([]);
   const [i, setI] = useState(0);
   const [puntaje, setPuntaje] = useState(0);
-  const [aciertos, setAciertos] = useState(0);
+  const [resultados, setResultados] = useState([]); // true/false por carta
   const [monstruos, setMonstruos] = useState([]);
   const [restante, setRestante] = useState(SEGUNDOS);
   const [linksClicados, setLinksClicados] = useState([]);
   const [resultado, setResultado] = useState(null);
   const [aviso, setAviso] = useState(null);
+  const [sacudir, setSacudir] = useState(0);
   const [miId, setMiId] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const timer = useRef(null);
+
+  const correo = mazo[i];
+  const aciertos = resultados.filter(Boolean).length;
 
   useEffect(() => {
     try {
@@ -55,19 +68,12 @@ export default function Jugar() {
     } catch {}
   }, []);
 
-  // Cuenta regresiva por correo
+  // Cuenta regresiva: solo con la carta abierta
   useEffect(() => {
     if (fase !== "jugando") return;
     timer.current = setInterval(() => setRestante((s) => s - 1), 1000);
     return () => clearInterval(timer.current);
   }, [fase, i]);
-
-  useEffect(() => {
-    if (fase === "jugando" && restante <= 0) responder(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restante, fase]);
-
-  const correo = mazo[i];
 
   function agregarMonstruo() {
     setMonstruos((m) => [...m, MONSTRUOS[m.length % MONSTRUOS.length]]);
@@ -77,18 +83,22 @@ export default function Jugar() {
     e.preventDefault();
     const n = nombre.trim().slice(0, 20);
     if (!n) return;
-    try {
-      localStorage.setItem("top-nombre", n);
-    } catch {}
+    try { localStorage.setItem("top-nombre", n); } catch {}
     setNombre(n);
     const todos = await cargarCorreos();
     setMazo(barajar(todos).slice(0, CORREOS_POR_PARTIDA));
     setI(0);
     setPuntaje(0);
-    setAciertos(0);
+    setResultados([]);
     setMonstruos([]);
     setMiId(null);
     setLinksClicados([]);
+    setResultado(null);
+    setRestante(SEGUNDOS);
+    setFase("sobre");
+  }
+
+  function abrir() {
     setRestante(SEGUNDOS);
     setFase("jugando");
   }
@@ -99,38 +109,45 @@ export default function Jugar() {
     if (link.malicioso) {
       setPuntaje((p) => p - PENALIDAD_LINK);
       agregarMonstruo();
-      setAviso({ tipo: "malo", texto: `¡Te atraparon! Ese link iba a ${link.url} (−${PENALIDAD_LINK})` });
+      setSacudir((s) => s + 1);
+      setAviso({ tipo: "malo", texto: `¡Te atraparon! Ese link iba a ${link.url}. Pierdes ${PENALIDAD_LINK} puntos.` });
     } else {
-      setAviso({ tipo: "bueno", texto: "Link seguro. Pero ¿y el resto del correo?" });
+      setAviso({ tipo: "bueno", texto: "Ese link es seguro, pero revisa el resto de la carta." });
     }
-    setTimeout(() => setAviso(null), 2600);
+    setTimeout(() => setAviso(null), 2800);
   }
 
   // eleccion: "truco" | "dulce" | null (se acabó el tiempo)
-  function responder(eleccion) {
-    if (fase !== "jugando") return;
-    clearInterval(timer.current);
-    const correcta = correo.es_phishing ? "truco" : "dulce";
-    const acerto = eleccion === correcta;
-    let ganados = 0;
-    if (acerto) {
-      ganados = PTS_ACIERTO + Math.round((PTS_RAPIDEZ * Math.max(restante, 0)) / SEGUNDOS);
-      setAciertos((a) => a + 1);
-      setPuntaje((p) => p + ganados);
-    } else if (correo.es_phishing) {
-      agregarMonstruo(); // le abriste la puerta a un monstruo
-    }
-    setResultado({ eleccion, acerto, ganados });
-    setFase("feedback");
-  }
+  const responder = useCallback(
+    (eleccion) => {
+      if (fase !== "jugando") return;
+      clearInterval(timer.current);
+      const correcta = correo.es_phishing ? "truco" : "dulce";
+      const acerto = eleccion === correcta;
+      let ganados = 0;
+      if (acerto) {
+        ganados = PTS_ACIERTO + Math.round((PTS_RAPIDEZ * Math.max(restante, 0)) / SEGUNDOS);
+        setPuntaje((p) => p + ganados);
+      } else if (correo.es_phishing) {
+        agregarMonstruo(); // le abriste la puerta a un monstruo
+      }
+      setResultados((r) => [...r, acerto]);
+      setResultado({ eleccion, acerto, ganados });
+      setFase("feedback");
+    },
+    [fase, correo, restante]
+  );
+
+  useEffect(() => {
+    if (fase === "jugando" && restante <= 0) responder(null);
+  }, [restante, fase, responder]);
 
   async function siguiente() {
     if (i + 1 < mazo.length) {
       setI(i + 1);
       setLinksClicados([]);
       setResultado(null);
-      setRestante(SEGUNDOS);
-      setFase("jugando");
+      setFase("sobre");
       return;
     }
     setFase("fin");
@@ -146,28 +163,42 @@ export default function Jugar() {
     else setMiId(data.id);
   }
 
+  // Atajos de teclado: Enter abre / continúa, D = dulce, T = truco
+  useEffect(() => {
+    function onKey(e) {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+      const k = e.key.toLowerCase();
+      if (fase === "sobre" && (k === "enter" || k === " ")) { e.preventDefault(); abrir(); }
+      else if (fase === "jugando" && (k === "d" || k === "arrowleft")) responder("dulce");
+      else if (fase === "jugando" && (k === "t" || k === "arrowright")) responder("truco");
+      else if (fase === "feedback" && k === "enter") { e.preventDefault(); siguiente(); }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
   // ───────── Pantallas ─────────
 
   if (fase === "inicio") {
     return (
       <main className="contenedor estrecho">
-        <Link href="/" className="volver">← Volver</Link>
-        <h1 className="titulo">Truco o Phishing</h1>
+        <Link href="/" className="volver">← Inicio</Link>
+        <h1 className="titulo">Te llegaron {CORREOS_POR_PARTIDA} cartas</h1>
         <p className="lead">
-          Es noche de Halloween y te llegan {CORREOS_POR_PARTIDA} correos. Algunos son de tus vecinos;
-          otros son de monstruos que quieren entrar a tu casa. Tienes {SEGUNDOS} segundos por correo.
+          Algunas son de tus vecinos. Otras son de monstruos que quieren entrar a tu casa.
         </p>
         <ul className="reglas">
-          <li>🍬 <b>Dulce</b> si el correo es legítimo, 🎃 <b>Truco</b> si es phishing.</li>
-          <li>Pasa el mouse sobre los links para ver a dónde llevan de verdad.</li>
-          <li>Hacer clic en un link malicioso resta {PENALIDAD_LINK} puntos y deja entrar a un monstruo.</li>
-          <li>+{PTS_ACIERTO} por acierto y hasta +{PTS_RAPIDEZ} extra por rapidez.</li>
+          <li><span className="ic">🍬</span><span><b>Dulce</b> si la carta es legítima, <b>Truco</b> si es phishing.</span></li>
+          <li><span className="ic">🔍</span><span>Pasa el mouse sobre los links para ver a dónde llevan de verdad.</span></li>
+          <li><span className="ic">⏳</span><span>Tienes {SEGUNDOS} segundos por carta. Mientras más rápido aciertes, más puntos (hasta {PTS_ACIERTO + PTS_RAPIDEZ}).</span></li>
+          <li><span className="ic">🧟</span><span>Cada error o clic en un link malicioso deja entrar a un monstruo.</span></li>
         </ul>
         <form onSubmit={empezar} className="form-nombre">
           <input
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            placeholder="Tu nombre de cazador"
+            placeholder="Tu nombre para el registro"
+            aria-label="Tu nombre"
             maxLength={20}
             required
             autoFocus
@@ -179,62 +210,71 @@ export default function Jugar() {
   }
 
   if (fase === "fin") {
-    const total = mazo.length;
-    const mensaje =
-      monstruos.length === 0
-        ? "Casa intacta. Ningún monstruo logró entrar. 🛡️"
-        : monstruos.length <= 2
-        ? "Algunos monstruos se colaron, pero sobreviviste."
-        : "Tu casa está llena de monstruos… revisa las señales y vuelve a intentarlo.";
     return (
       <main className="contenedor estrecho">
-        <h1 className="titulo">Fin de la noche</h1>
         <div className="resumen">
-          <div className="big">{puntaje}</div>
-          <div>puntos · {aciertos}/{total} aciertos</div>
-          <div className="casa">
-            🏚️ {monstruos.length ? monstruos.join(" ") : "—"}
+          <p className="rango">{rango(monstruos.length, aciertos, mazo.length)}</p>
+          <p className="big">{puntaje}</p>
+          <p>puntos · {aciertos} de {mazo.length} cartas bien selladas</p>
+          <div className="casa" aria-label={`${monstruos.length} monstruos en tu casa`}>
+            🏚️ {monstruos.length ? monstruos.join(" ") : "sin visitas"}
           </div>
-          <p>{mensaje}</p>
-          {guardando && <p className="muted">Guardando en la cripta…</p>}
+          {guardando && <p className="muted">Anotando tu nombre en el registro…</p>}
+        </div>
+        <div className="acciones" style={{ justifyContent: "center" }}>
+          <button className="btn btn-primario" onClick={() => setFase("inicio")}>Jugar otra vez</button>
+          <Link className="btn" href="/analizar">Revisar un correo real</Link>
         </div>
         <Ranking resaltarId={miId} />
-        <div className="acciones">
-          <button className="btn btn-primario" onClick={() => setFase("inicio")}>Jugar otra vez</button>
-          <Link className="btn" href="/analizar">Analizar un correo real</Link>
-        </div>
       </main>
     );
   }
 
+  const urgente = fase === "jugando" && restante <= 5;
+
   return (
     <main className="contenedor">
       <div className="hud">
-        <span>📬 {i + 1}/{mazo.length}</span>
-        <span>⭐ {puntaje}</span>
-        <span className="casa-mini" title="Monstruos dentro de tu casa">🏚️ {monstruos.join("") || "vacía"}</span>
-        <span className={`reloj ${restante <= 5 && fase === "jugando" ? "urgente" : ""}`}>
-          ⏳ {fase === "jugando" ? restante : "—"}s
-        </span>
+        <ol className="progreso" aria-label={`Carta ${i + 1} de ${mazo.length}`}>
+          {mazo.map((_, k) => (
+            <li
+              key={k}
+              className={k < resultados.length ? (resultados[k] ? "ok" : "mal") : k === i ? "actual" : ""}
+            />
+          ))}
+        </ol>
+        <div className="hud-datos">
+          <span className="casa-mini" title="Monstruos dentro de tu casa">🏚️ {monstruos.join("") || "0"}</span>
+          <span className="puntos" aria-label="Puntos">{puntaje}</span>
+          <span className={`reloj ${urgente ? "urgente" : ""}`} aria-label="Segundos restantes">
+            {fase === "jugando" ? `${restante}s` : "—"}
+          </span>
+        </div>
       </div>
-      <div className="barra-tiempo">
-        <div style={{ width: `${(Math.max(restante, 0) / SEGUNDOS) * 100}%` }} />
+      <div className={`mecha ${urgente ? "urgente" : ""}`}>
+        <div style={{ width: `${fase === "jugando" ? (Math.max(restante, 0) / SEGUNDOS) * 100 : fase === "sobre" ? 100 : 0}%` }} />
       </div>
 
-      {aviso && <div className={`aviso aviso-${aviso.tipo}`}>{aviso.texto}</div>}
+      {aviso && <div className={`aviso aviso-${aviso.tipo}`} role="status">{aviso.texto}</div>}
 
-      <EmailCard
-        correo={correo}
-        nombre={nombre}
-        onLinkClick={clicEnLink}
-        revelado={fase === "feedback"}
-        linksClicados={linksClicados}
-      />
+      {fase === "sobre" ? (
+        <Sobre key={`sobre-${i}`} correo={correo} numero={i + 1} onAbrir={abrir} />
+      ) : (
+        <EmailCard
+          key={`carta-${i}-${sacudir}`}
+          correo={correo}
+          nombre={nombre}
+          onLinkClick={clicEnLink}
+          sello={fase === "feedback" ? (correo.es_phishing ? "truco" : "dulce") : null}
+          linksClicados={linksClicados}
+          sacudir={sacudir > 0 && fase === "jugando"}
+        />
+      )}
 
       {fase === "jugando" && (
         <div className="decision">
-          <button className="btn btn-dulce" onClick={() => responder("dulce")}>🍬 Dulce</button>
-          <button className="btn btn-truco" onClick={() => responder("truco")}>🎃 Truco</button>
+          <button className="btn btn-dulce" onClick={() => responder("dulce")}>🍬 Dulce<kbd>D</kbd></button>
+          <button className="btn btn-truco" onClick={() => responder("truco")}>🎃 Truco<kbd>T</kbd></button>
         </div>
       )}
 
@@ -242,25 +282,23 @@ export default function Jugar() {
         <section className={`feedback ${resultado.acerto ? "ok" : "mal"}`}>
           <h3>
             {resultado.acerto
-              ? `¡Correcto! +${resultado.ganados}`
+              ? `Bien sellada. Ganas ${resultado.ganados} puntos.`
               : resultado.eleccion === null
-              ? "¡Se acabó el tiempo!"
+              ? "Se acabó el tiempo."
               : correo.es_phishing
-              ? "Le abriste la puerta a un monstruo 🧟"
-              : "Era un vecino de verdad y lo dejaste afuera"}
+              ? "Le abriste la puerta a un monstruo."
+              : "Era tu vecino y lo dejaste afuera."}
           </h3>
-          <p>
-            Este correo era <b>{correo.es_phishing ? "🎃 TRUCO (phishing)" : "🍬 DULCE (legítimo)"}</b>.{" "}
-            {correo.explicacion}
-          </p>
-          <h4>{correo.es_phishing ? "Señales de trampa:" : "Por qué era seguro:"}</h4>
+          <p>{correo.explicacion}</p>
+          <h4>{correo.es_phishing ? "Señales de la trampa" : "Por qué era de confianza"}</h4>
           <ul>
             {correo.senales.map((s, k) => (
               <li key={k}>{s}</li>
             ))}
           </ul>
-          <button className="btn btn-primario" onClick={siguiente}>
-            {i + 1 < mazo.length ? "Siguiente correo →" : "Ver resultados"}
+          <button className="btn btn-primario" onClick={siguiente} autoFocus>
+            {i + 1 < mazo.length ? "Abrir la siguiente carta" : "Ver cómo terminó la noche"}
+            <kbd>Enter</kbd>
           </button>
         </section>
       )}

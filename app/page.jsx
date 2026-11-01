@@ -4,27 +4,32 @@ import Ranking from "@/components/Ranking";
 export default function Home() {
   return (
     <main className="contenedor estrecho">
-      <div className="hero">
-        <div className="hero-emoji" aria-hidden>📬🎃</div>
-        <h1 className="titulo grande">Truco o Phishing</h1>
+      <header className="hero">
+        <div className="luna" aria-hidden />
+        <span className="murcielago" aria-hidden>🦇</span>
+        <h1 className="titulo-hero">
+          Truco
+          <span className="o">o</span>
+          Phishing
+        </h1>
         <p className="lead">
-          Los zombis ya no tocan la puerta: <b>mandan correos</b>. ¿Sabrías distinguir a tu vecino de un monstruo
-          que quiere robarte la contraseña?
+          Esta noche los monstruos no tocan la puerta: te escriben. Abre tu buzón, lee cada carta y decide
+          quién es tu vecino y quién quiere robarte la contraseña.
         </p>
-      </div>
+      </header>
 
-      <div className="modos">
-        <Link href="/jugar" className="modo">
-          <span className="modo-emoji">🕹️</span>
-          <h2>Jugar</h2>
-          <p>Revisa tu buzón embrujado y decide: ¿dulce o truco? Compite en el ranking.</p>
+      <nav className="buzon" aria-label="Elige un modo">
+        <Link href="/jugar" className="modo modo-principal">
+          <span className="modo-icono" aria-hidden>✉️</span>
+          <h2>Abrir el buzón</h2>
+          <p>8 cartas, 25 segundos cada una. Sella cada una como dulce o truco y entra al registro.</p>
         </Link>
         <Link href="/analizar" className="modo">
-          <span className="modo-emoji">🔮</span>
-          <h2>Analizar un correo</h2>
-          <p>Pega un correo sospechoso real y una IA te explica sus señales de alerta.</p>
+          <span className="modo-icono" aria-hidden>🔮</span>
+          <h2>Revisar un correo real</h2>
+          <p>Pega un correo sospechoso que te llegó y la IA te señala dónde está la trampa.</p>
         </Link>
-      </div>
+      </nav>
 
       <Ranking />
     </main>

@@ -13,7 +13,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Creepster&family=Special+Elite&family=Inter:wght@400;600;800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Special+Elite&family=Atkinson+Hyperlegible:wght@400;700&display=swap"
           rel="stylesheet"
         />
       </head>
@@ -21,9 +21,7 @@ export default function RootLayout({ children }) {
         <div className="niebla" aria-hidden />
         <MusicaFondo />
         {children}
-        <footer className="pie">
-          Halloween as a Service · Vercel (PaaS) · Supabase (BaaS) · Gemini (AIaaS)
-        </footer>
+        <footer className="pie">Hecho con Vercel, Supabase y Gemini para Halloween as a Service.</footer>
       </body>
     </html>
   );

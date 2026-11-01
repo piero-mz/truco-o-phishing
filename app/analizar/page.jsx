@@ -50,8 +50,8 @@ export default function Analizar() {
 
   return (
     <main className="contenedor estrecho">
-      <Link href="/" className="volver">← Volver</Link>
-      <h1 className="titulo">El Cazafantasmas del Phishing</h1>
+      <Link href="/" className="volver">← Inicio</Link>
+      <h1 className="titulo">Revisar un correo real</h1>
       <p className="lead">
         ¿Te llegó un correo raro? Pégalo aquí (remitente, asunto, cuerpo y links) y la IA te dirá si es dulce o truco.
       </p>

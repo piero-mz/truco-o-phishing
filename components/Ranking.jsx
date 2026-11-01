@@ -41,19 +41,19 @@ export default function Ranking({ resaltarId }) {
 
   return (
     <section className="ranking">
-      <h3>🏆 Ranking de cazadores de phishing <span className="en-vivo">● en vivo</span></h3>
+      <h3>Registro de cazadores <span className="en-vivo">en vivo</span></h3>
       {estado === "sin-config" && <p className="muted">Configura Supabase en .env.local para activar el ranking.</p>}
       {estado === "error" && <p className="muted">No se pudo cargar el ranking.</p>}
-      {estado === "cargando" && <p className="muted">Invocando puntajes…</p>}
-      {estado === "ok" && filas.length === 0 && <p className="muted">Nadie ha jugado todavía. ¡Sé el primero!</p>}
+      {estado === "cargando" && <p className="muted">Abriendo el registro…</p>}
+      {estado === "ok" && filas.length === 0 && <p className="muted">El registro está vacío. Abre el buzón y sé el primer nombre de la noche.</p>}
       {filas.length > 0 && (
         <ol>
           {filas.map((f, i) => (
             <li key={f.id} className={f.id === resaltarId ? "yo" : ""}>
-              <span className="pos">{["🥇", "🥈", "🥉"][i] || i + 1}</span>
+              <span className="pos">{i + 1}</span>
               <span className="nom">{f.nombre}</span>
               <span className="det">
-                {f.aciertos}/{f.total} · {f.monstruos} 🧟
+                {f.aciertos}/{f.total} cartas, {f.monstruos} 🧟
               </span>
               <span className="pts">{f.puntaje}</span>
             </li>
