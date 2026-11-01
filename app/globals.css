@@ -226,3 +226,15 @@ textarea { resize: vertical; font-family: ui-monospace, monospace; font-size: .9
   .carta { padding: 16px 14px 42px; transform: none; }
   .decision { position: sticky; bottom: 12px; }
 }
+
+/* ── Botón de música ── */
+.boton-musica {
+  position: fixed; top: 14px; right: 14px; z-index: 50;
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid #3a3048; background: rgba(23,19,31,.85); color: var(--texto);
+  font-size: 1.2rem; cursor: pointer; backdrop-filter: blur(6px);
+  transition: transform .15s, border-color .15s;
+}
+.boton-musica:hover { transform: scale(1.08); border-color: var(--naranja); }
+.boton-musica.activo { border-color: var(--naranja); box-shadow: 0 0 14px rgba(255,122,24,.35); }
+@media (max-width: 860px) { .contenedor { padding-top: 64px; } }

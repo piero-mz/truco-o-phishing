@@ -1,4 +1,5 @@
 import "./globals.css";
+import MusicaFondo from "@/components/MusicaFondo";
 
 export const metadata = {
   title: "Truco o Phishing 🎃",
@@ -18,6 +19,7 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <div className="niebla" aria-hidden />
+        <MusicaFondo />
         {children}
         <footer className="pie">
           Halloween as a Service · Vercel (PaaS) · Supabase (BaaS) · Gemini (AIaaS)
