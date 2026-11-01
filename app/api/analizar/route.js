@@ -54,7 +54,7 @@ export async function POST(req) {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: peticion,
-        signal: AbortSignal.timeout(20000), // no esperar más de 20 s por modelo
+        signal: AbortSignal.timeout(12000), // máx. 12 s por intento (4 intentos caben en 60 s)
       }
     );
     return { res, data: await res.json().catch(() => ({})) };
