@@ -22,6 +22,8 @@ Responde ÚNICAMENTE con un JSON con esta forma exacta:
 }
 Si el correo parece legítimo, usa "senales" para explicar por qué parece seguro.`;
 
+export const maxDuration = 60;
+
 export async function POST(req) {
   const body = await req.json().catch(() => ({}));
   const texto = typeof body.texto === "string" ? body.texto.trim() : "";
@@ -52,6 +54,7 @@ export async function POST(req) {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: peticion,
+        signal: AbortSignal.timeout(20000), // no esperar más de 20 s por modelo
       }
     );
     return { res, data: await res.json().catch(() => ({})) };
@@ -61,7 +64,12 @@ export async function POST(req) {
     let res, data;
     for (const modelo of modelos) {
       for (let intento = 0; intento < 2; intento++) {
-        ({ res, data } = await llamar(modelo));
+        try {
+          ({ res, data } = await llamar(modelo));
+        } catch {
+          res = { ok: false, status: 503 }; // timeout → tratar como saturado
+          data = {};
+        }
         if (res.ok || ![429, 500, 503].includes(res.status)) break;
         await new Promise((r) => setTimeout(r, 1200));
       }
