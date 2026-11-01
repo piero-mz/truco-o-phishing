@@ -37,29 +37,46 @@ export async function POST(req) {
   if (!apiKey) {
     return Response.json({ error: "Falta configurar GEMINI_API_KEY en el servidor." }, { status: 500 });
   }
-  const modelo = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+  // Modelo principal + respaldo: si uno está saturado (429/503), se prueba el siguiente.
+  const modelos = [process.env.GEMINI_MODEL || "gemini-3.8-flash", "gemini-3.7-flash"];
+  const peticion = JSON.stringify({
+    systemInstruction: { parts: [{ text: INSTRUCCIONES }] },
+    contents: [{ role: "user", parts: [{ text: `Correo a analizar:\n"""\n${texto}\n"""` }] }],
+    generationConfig: { responseMimeType: "application/json", temperature: 0.3 },
+  });
 
-  try {
+  async function llamar(modelo) {
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: INSTRUCCIONES }] },
-          contents: [
-            { role: "user", parts: [{ text: `Correo a analizar:\n"""\n${texto}\n"""` }] },
-          ],
-          generationConfig: { responseMimeType: "application/json", temperature: 0.3 },
-        }),
+        body: peticion,
       }
     );
+    return { res, data: await res.json().catch(() => ({})) };
+  }
 
-    const data = await res.json();
+  try {
+    let res, data;
+    for (const modelo of modelos) {
+      for (let intento = 0; intento < 2; intento++) {
+        ({ res, data } = await llamar(modelo));
+        if (res.ok || ![429, 500, 503].includes(res.status)) break;
+        await new Promise((r) => setTimeout(r, 1200));
+      }
+      if (res.ok) break;
+      console.error(`Gemini (${modelo}) error:`, data);
+    }
+
     if (!res.ok) {
-      console.error("Gemini error:", data);
+      const saturado = [429, 503].includes(res.status);
       return Response.json(
-        { error: data?.error?.message || "La IA no respondió. Intenta de nuevo." },
+        {
+          error: saturado
+            ? "Los espíritus de la IA están saturados ahora mismo. Intenta en unos segundos."
+            : data?.error?.message || "La IA no respondió. Intenta de nuevo.",
+        },
         { status: 502 }
       );
     }
