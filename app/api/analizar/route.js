@@ -63,28 +63,26 @@ export async function POST(req) {
   try {
     let res, data;
     for (const modelo of modelos) {
-      for (let intento = 0; intento < 2; intento++) {
-        try {
-          ({ res, data } = await llamar(modelo));
-        } catch {
-          res = { ok: false, status: 503 }; // timeout → tratar como saturado
-          data = {};
-        }
-        if (res.ok || ![429, 500, 503].includes(res.status)) break;
-        await new Promise((r) => setTimeout(r, 1200));
+      // Un solo intento por modelo: el nivel gratuito tiene pocas peticiones
+      // por minuto/día y reintentar solo gasta cuota.
+      try {
+        ({ res, data } = await llamar(modelo));
+      } catch {
+        res = { ok: false, status: 503 }; // timeout → tratar como saturado
+        data = {};
       }
       if (res.ok) break;
-      console.error(`Gemini (${modelo}) error:`, data);
+      console.error(`Gemini (${modelo}) ${res.status}:`, data);
+      if (![429, 500, 503].includes(res.status)) break; // error que no se arregla cambiando de modelo
     }
 
     if (!res.ok) {
-      const saturado = [429, 503].includes(res.status);
+      const mensajes = {
+        429: "Se alcanzó el límite gratuito de la IA. Espera un minuto e inténtalo de nuevo.",
+        503: "Los espíritus de la IA están saturados ahora mismo. Intenta en unos segundos.",
+      };
       return Response.json(
-        {
-          error: saturado
-            ? "Los espíritus de la IA están saturados ahora mismo. Intenta en unos segundos."
-            : data?.error?.message || "La IA no respondió. Intenta de nuevo.",
-        },
+        { error: mensajes[res.status] || data?.error?.message || "La IA no respondió. Intenta de nuevo." },
         { status: 502 }
       );
     }
