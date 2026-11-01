@@ -37,7 +37,7 @@ export async function POST(req) {
   if (!apiKey) {
     return Response.json({ error: "Falta configurar GEMINI_API_KEY en el servidor." }, { status: 500 });
   }
-  const modelo = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const modelo = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
   try {
     const res = await fetch(
