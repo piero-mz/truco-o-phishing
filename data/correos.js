@@ -242,3 +242,24 @@ export const CORREOS = [
     explicacion: "Publicidad normal del servicio. Dominio coherente y nada que te pida información.",
   },
 ];
+
+// Texto a resaltar dentro de la carta al revelar la respuesta.
+// Cada posición corresponde a la señal con el mismo índice en `senales`
+// (null = esa señal no tiene un texto concreto que marcar).
+// {nombre} se reemplaza por el nombre del jugador.
+export const MARCAS = {
+  "banco-falso": ["bancodelmasalla-verificacion.xyz", "en las próximas 2 horas", "bancodelmasalla.verificar-cripta.ru", "Estimado cliente", "Verificar mi cuenta ahora"],
+  "carta-zombi": ["Querrido becino", "@gmail.com", "la de tu banco", "fiesta-zombi.tk"],
+  "premio-calabaza": ["ca1abaza-express.com", "1000 kg de dulces gratis", "Solo debes pagar S/ 9.90", "solo por hoy"],
+  "netfright-falso": ["netfright.com/mi-cuenta", "netfright-billing.support", "actualiza tu tarjeta"],
+  "bono-exe": ["descargas.cc", ".pdf.exe", "bono especial"],
+  "jefa-bruja": ["@outlook.com", "No le comentes a nadie", "tarjetas de regalo", "no puedo hablar"],
+  "paquete-acortador": ["bit.ly/3xFanTasma", "S/ 2.50", "Tu paquete está retenido", "entrega-pendiente.info"],
+  "junta-vecinal": ["loscipreses.pe", "Hola, {nombre}", null, null],
+  "banco-real": ["bancodelmasalla.com", null, "nunca te pediremos tu clave por correo", "Hola, {nombre}"],
+  "pedido-real": ["calabaza-express.com", "pedido #4821", null],
+  "profesor-real": ["universidad-tenebrosa.edu.pe", null, null],
+  "netfright-real": ["netfright.com", null],
+};
+
+for (const c of CORREOS) c.marcas = MARCAS[c.id] || [];

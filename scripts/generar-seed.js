@@ -10,14 +10,14 @@ const filas = CORREOS.map(
   (c) =>
     `  (${q(c.id)}, ${q(c.remitente_nombre)}, ${q(c.remitente_email)}, ${q(c.asunto)}, ${q(c.cuerpo)}, ${j(
       c.links
-    )}, ${q(c.adjunto)}, ${c.es_phishing}, ${j(c.senales)}, ${q(c.explicacion)})`
+    )}, ${q(c.adjunto)}, ${c.es_phishing}, ${j(c.senales)}, ${q(c.explicacion)}, ${j(c.marcas)})`
 );
 
 const sql = `-- Generado automáticamente con \`npm run seed\`. No editar a mano: edita data/correos.js.
 -- Pégalo en Supabase → SQL Editor DESPUÉS de schema.sql.
 
 insert into public.correos
-  (id, remitente_nombre, remitente_email, asunto, cuerpo, links, adjunto, es_phishing, senales, explicacion)
+  (id, remitente_nombre, remitente_email, asunto, cuerpo, links, adjunto, es_phishing, senales, explicacion, marcas)
 values
 ${filas.join(",\n")}
 on conflict (id) do update set
@@ -29,7 +29,8 @@ on conflict (id) do update set
   adjunto          = excluded.adjunto,
   es_phishing      = excluded.es_phishing,
   senales          = excluded.senales,
-  explicacion      = excluded.explicacion;
+  explicacion      = excluded.explicacion,
+  marcas           = excluded.marcas;
 `;
 
 writeFileSync(new URL("../supabase/seed.sql", import.meta.url), sql);

@@ -12,14 +12,15 @@ create table if not exists public.correos (
   adjunto          text,
   es_phishing      boolean not null,
   senales          jsonb not null default '[]'::jsonb,  -- ["señal 1", ...]
-  explicacion      text not null
+  explicacion      text not null,
+  marcas           jsonb not null default '[]'::jsonb   -- texto a resaltar por señal
 );
 
 -- Partidas jugadas (ranking)
 create table if not exists public.partidas (
   id         bigint generated always as identity primary key,
   nombre     text not null check (char_length(nombre) between 1 and 20),
-  puntaje    int  not null check (puntaje between -1000 and 1500),
+  puntaje    int  not null check (puntaje between -1000 and 3000),
   aciertos   int  not null check (aciertos >= 0),
   total      int  not null check (total between 1 and 20),
   monstruos  int  not null default 0 check (monstruos between 0 and 50),
@@ -28,6 +29,11 @@ create table if not exists public.partidas (
 );
 
 create index if not exists partidas_puntaje_idx on public.partidas (puntaje desc, creado_en asc);
+
+-- Migración para proyectos creados con la versión anterior
+alter table public.correos add column if not exists marcas jsonb not null default '[]'::jsonb;
+alter table public.partidas drop constraint if exists partidas_puntaje_check;
+alter table public.partidas add constraint partidas_puntaje_check check (puntaje between -1000 and 3000);
 
 -- ── Row Level Security ──
 -- Sin RLS, cualquiera con la anon key (que es pública) podría borrar o editar todo.
