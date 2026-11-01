@@ -89,8 +89,8 @@ kbd {
   z-index: -1;
 }
 .luna::before, .luna::after { content: ""; position: absolute; border-radius: 50%; background: rgba(160, 140, 90, .25); }
-.luna::before { width: 34px; height: 34px; top: 52px; left: 48px; }
-.luna::after { width: 22px; height: 22px; top: 112px; left: 110px; }
+.luna::before { width: 18%; height: 18%; top: 27%; left: 25%; }
+.luna::after { width: 12%; height: 12%; top: 59%; left: 58%; }
 .murcielago { position: absolute; font-size: 1.4rem; top: 40px; right: 170px; transform: rotate(-12deg); }
 
 .titulo-hero {
