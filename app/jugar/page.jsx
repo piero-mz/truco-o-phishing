@@ -5,6 +5,7 @@ import Link from "next/link";
 import EmailCard, { Sobre } from "@/components/EmailCard";
 import Ranking from "@/components/Ranking";
 import { Contador, Explosion, Reloj } from "@/components/Efectos";
+import Tutorial from "@/components/Tutorial";
 import { supabase } from "@/lib/supabase";
 import { sfx } from "@/lib/sonido";
 import { CORREOS, MARCAS } from "@/data/correos";
@@ -57,7 +58,7 @@ function desenlace({ eleccion, acerto, esPhishing, monstruo }) {
 }
 
 export default function Jugar() {
-  // inicio → sobre → jugando → feedback → (sobre …) → fin
+  // inicio → tutorial → sobre → jugando → feedback → (sobre …) → fin
   const [fase, setFase] = useState("inicio");
   const [nombre, setNombre] = useState("");
   const [mazo, setMazo] = useState([]);
@@ -122,7 +123,7 @@ export default function Jugar() {
     setLinksClicados([]);
     setResultado(null);
     setRestante(SEGUNDOS);
-    setFase("sobre");
+    setFase("tutorial");
   }
 
   function abrir() {
@@ -266,6 +267,15 @@ export default function Jugar() {
           />
           <button className="btn btn-primario" type="submit">Abrir el buzón</button>
         </form>
+      </main>
+    );
+  }
+
+  // ───────── Tutorial (antes de cada partida) ─────────
+  if (fase === "tutorial") {
+    return (
+      <main className="contenedor">
+        <Tutorial onTerminar={() => setFase("sobre")} />
       </main>
     );
   }

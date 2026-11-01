@@ -475,6 +475,101 @@ textarea { resize: vertical; font-family: var(--f-mono); font-size: .9rem; line-
 .boton-musica:hover { border-color: var(--witch); }
 .boton-musica.activo { border-color: var(--ecto); box-shadow: var(--neon-ecto); }
 
+/* ═══════════ Tutorial ═══════════ */
+.tutorial { background: var(--server); border: 1px solid var(--linea); border-top: 2px solid var(--witch); border-radius: 8px; padding: 18px 22px 20px; animation: sale .4s cubic-bezier(.2, .8, .2, 1); }
+.tuto-cabecera { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.tuto-etapa { font-family: var(--f-mono); font-size: .78rem; color: var(--witch-texto); }
+.tuto-saltar { background: none; border: 0; color: var(--ash); font: inherit; font-size: .88rem; cursor: pointer; padding: 4px 0; }
+.tuto-saltar:hover { color: var(--ghost); }
+.tuto-barra { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0 18px; }
+.tuto-barra span { height: 4px; border-radius: 2px; background: var(--linea); transition: background .3s, box-shadow .3s; }
+.tuto-barra span.lleno { background: var(--witch); box-shadow: 0 0 10px rgba(138, 43, 226, .6); }
+.tuto-paso { animation: entra-paso .35s ease-out; }
+@keyframes entra-paso { from { opacity: 0; transform: translateX(24px); } }
+.tuto-titulo { font-family: var(--f-titulo); font-weight: 700; font-size: clamp(1.5rem, 5vw, 2rem); letter-spacing: -0.02em; margin: 0 0 8px; }
+.tuto-regla { font-size: 1.05rem; margin: 0 0 16px; max-width: 62ch; }
+.tuto-nota, .tuto-pista { color: var(--ash); font-size: .9rem; margin: 14px 0 0; }
+.tuto-pista { color: var(--cursed); animation: latido .8s infinite alternate; transform-origin: left; }
+.tuto-mini { display: block; color: var(--ash); font-size: .78rem; }
+.tuto-pie { display: flex; justify-content: space-between; gap: 12px; margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--linea); }
+.tuto-oro { margin: 16px 0 0; padding: 12px 14px; border-radius: 6px; border: 1px solid rgba(255, 184, 0, .4); background: rgba(255, 184, 0, .08); }
+.tuto-oro b { color: var(--cursed); }
+
+/* Paso 1: URL desarmada */
+.tuto-ejemplos { display: grid; gap: 12px; }
+.tuto-ejemplo { background: var(--void); border: 1px solid var(--linea); border-radius: 8px; padding: 12px 14px; }
+.tuto-veredicto { display: inline-block; font-family: var(--f-titulo); font-weight: 700; font-size: .9rem; margin-bottom: 8px; }
+.tuto-veredicto.ok { color: var(--ecto); }
+.tuto-veredicto.mal { color: var(--blood); }
+.url-desarmada { display: flex; flex-wrap: wrap; align-items: flex-start; row-gap: 6px; }
+.seg { display: inline-flex; flex-direction: column; }
+.seg-txt { padding: 6px 2px; font-size: clamp(.82rem, 2.6vw, 1.05rem); white-space: nowrap; }
+.seg-etq { width: 0; min-width: 100%; font-size: .7rem; line-height: 1.25; color: var(--ash); padding-top: 4px; border-top: 2px solid var(--linea); text-align: center; }
+.u-proto .seg-txt, .u-ruta .seg-txt { color: var(--ash); }
+.u-sub .seg-txt { color: var(--ghost); opacity: .75; }
+.u-dueno .seg-txt { border-radius: 4px; font-weight: 700; padding-left: 6px; padding-right: 6px; animation: dueno-aparece .6s ease-out .3s both; }
+.real .u-dueno .seg-txt { color: var(--void); background: var(--ecto); box-shadow: var(--neon-ecto); }
+.falso .u-dueno .seg-txt { color: var(--ghost); background: var(--blood); box-shadow: var(--neon-blood); }
+.u-dueno .seg-etq { font-weight: 700; color: var(--ghost); }
+.real .u-dueno .seg-etq { border-top-color: var(--ecto); }
+.falso .u-dueno .seg-etq { border-top-color: var(--blood); }
+.falso .u-sub .seg-etq { color: var(--cursed); border-top-color: var(--cursed); }
+@keyframes dueno-aparece { from { background: transparent; box-shadow: none; color: var(--ghost); } }
+.u-dueno-inline { white-space: nowrap; padding: 0 4px; border-radius: 3px; background: rgba(0, 255, 157, .18); color: var(--ecto); }
+.u-dueno-inline.mal { background: rgba(255, 42, 42, .2); color: #ff6b6b; }
+
+/* Paso 2: reto de letras */
+.reto { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.reto-opcion {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 12px; cursor: pointer;
+  background: var(--void); color: var(--ghost); border: 1px solid var(--linea); border-radius: 8px; font: inherit;
+  font-size: clamp(.95rem, 3vw, 1.2rem); transition: border-color .2s, box-shadow .2s, transform .1s;
+}
+.reto-opcion:hover { border-color: var(--witch); }
+.reto-opcion:active { transform: scale(.98); }
+.reto-opcion small { font-size: .8rem; color: var(--ash); }
+.reto-opcion.es-falso { border-color: var(--blood); box-shadow: var(--neon-blood); }
+.reto-opcion.es-real { border-color: var(--ecto); }
+.reto-opcion.elegido { animation: pop .35s; }
+.reto-resultado { font-weight: 600; margin: 12px 0 0; }
+.reto-resultado.ok { color: var(--ecto); }
+.reto-resultado.mal { color: var(--cursed); }
+.letra-trampa { background: var(--blood); color: var(--ghost); border-radius: 3px; padding: 0 2px; animation: latido .6s 3 alternate; display: inline-block; }
+.trucos-letras { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-top: 16px; }
+.trucos-letras .tuto-mini { width: 100%; }
+.truco-letra { padding: 6px 10px; border-radius: 4px; background: var(--void); border: 1px solid var(--linea); font-size: .9rem; }
+.truco-letra small { color: var(--ash); margin-left: 4px; }
+
+/* Paso 3: link que miente */
+.mini-correo { position: relative; background: var(--void); border: 1px solid var(--linea); border-radius: 8px; padding: 16px 16px 48px; }
+.mini-correo p { margin: 0 0 8px; }
+.mini-correo .barra-estado { border-radius: 0 0 8px 8px; }
+.link-correo.pulso { animation: pulso-link 1.2s infinite; border-radius: 3px; }
+@keyframes pulso-link { 50% { box-shadow: 0 0 0 4px rgba(255, 107, 0, .3); background: rgba(255, 107, 0, .12); } }
+.comparacion { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; margin-top: 14px; animation: sale .35s ease-out; }
+.comparacion > div:not(.flecha) { background: var(--void); border: 1px solid var(--linea); border-radius: 6px; padding: 10px 12px; overflow-wrap: anywhere; }
+.comparacion .flecha { font-size: 1.4rem; color: var(--blood); }
+
+/* Paso 4: alarmas */
+.alarmas-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; align-items: start; }
+.ejemplo-alarmas { padding-bottom: 16px; line-height: 1.9; }
+.mini-de { color: var(--ash); margin-bottom: 8px; }
+.alarma { border-radius: 3px; padding: 1px 3px; animation: alarma-aparece .5s ease-out var(--d) both; background: rgba(255, 42, 42, .18); outline: 1px solid rgba(255, 42, 42, .55); }
+.alarma sup { margin-left: 2px; }
+.ejemplo-alarmas .adjunto { margin: 6px 0 0; }
+@keyframes alarma-aparece { from { background: transparent; outline-color: transparent; } }
+.alarmas-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.alarmas-lista li { display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 6px; background: var(--void); border: 1px solid var(--linea); animation: entra-paso .35s ease-out both; }
+.alarma-ic { font-size: 1.5rem; text-align: center; }
+.alarmas-lista b { display: block; font-family: var(--f-titulo); }
+.alarmas-lista small { color: var(--ash); }
+
+@media (max-width: 600px) {
+  .tutorial { padding: 16px 14px; }
+  .alarmas-grid, .comparacion { grid-template-columns: 1fr; }
+  .comparacion .flecha { transform: rotate(90deg); justify-self: center; }
+}
+
 /* ═══════════ Responsive y accesibilidad ═══════════ */
 @media (max-width: 860px) { .contenedor { padding-top: 68px; } }
 @media (max-width: 600px) {
